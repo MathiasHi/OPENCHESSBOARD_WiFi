@@ -1,4 +1,7 @@
 #pragma once
+
+#define BOARD_USES_HW_GPIO_NUMBERS
+
 #include <Arduino.h>
 #include <FreeRTOS.h>
 #include <WiFi.h>
@@ -17,6 +20,7 @@
 #include "puzzle_app.h"
 #include <Update.h>
 #include <ESPmDNS.h>
+#include <FastLED.h>
 
 // Debug Settings
 //#define MANUAL_MOVE_INPUT

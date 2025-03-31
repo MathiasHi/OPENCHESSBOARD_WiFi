@@ -1,6 +1,7 @@
 #pragma once
 
 extern void initHW(void);
+extern void setLEDs(int row, int col);
 extern String getMoveInput(void);
 extern void clearDisplay(void);
 extern void displayMove(String mv);
