@@ -7,20 +7,28 @@ CRGB leds[NUM_LEDS];
 
 // HW GPIO configuration
 const uint8_t LED_DATA_PIN = D2;
-const uint8_t HALL_SENSE = A3;
 
-int HALL_OUT_S0 = 10; // D10
-int HALL_OUT_S1 = 9;  // D9
-int HALL_OUT_S2 = 8;  // D8
+const uint8_t HALL_SENSE_COL_1 = A0;
+const uint8_t HALL_SENSE_COL_2 = A1;
+const uint8_t HALL_SENSE_COL_3 = A2;
+const uint8_t HALL_SENSE_COL_4 = A3;
+const uint8_t HALL_SENSE_COL_5 = A4;
+const uint8_t HALL_SENSE_COL_6 = A5;
+const uint8_t HALL_SENSE_COL_7 = A6;
+const uint8_t HALL_SENSE_COL_8 = A7;
 
-int HALL_ROW_S0 = A7; // A7/D21
-int HALL_ROW_S1 = A6; // A6/D20
-int HALL_ROW_S2 = A5; // A5/D19
+const uint8_t HALL_ROW_1 = D3;
+const uint8_t HALL_ROW_2 = D4;
+const uint8_t HALL_ROW_3 = D5;
+const uint8_t HALL_ROW_4 = D6;
+const uint8_t HALL_ROW_5 = D7;
+const uint8_t HALL_ROW_6 = D8;
+const uint8_t HALL_ROW_7 = D9;
+const uint8_t HALL_ROW_8 = D10;
 
-
-#define SENSE_THRS_NEG 2300
-#define SENSE_THRS_POS 3000
-#define SENSE_THRS_NO_POWER 800
+#define SENSE_THRS_NEG 1500
+#define SENSE_THRS_POS 2200
+#define SENSE_THRS_NO_POWER 400
 
 /* ---------------------------------------
  *  Function to initiate GPIOs.
@@ -36,16 +44,32 @@ void initHW(void)
   FastLED.addLeds<WS2812B, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
 
-/*
-  pinMode(HALL_OUT_S0, OUTPUT);
-  pinMode(HALL_OUT_S1, OUTPUT);
-  pinMode(HALL_OUT_S2, OUTPUT);
+  pinMode(HALL_SENSE_COL_1, INPUT);
+  pinMode(HALL_SENSE_COL_2, INPUT);
+  pinMode(HALL_SENSE_COL_3, INPUT);
+  pinMode(HALL_SENSE_COL_4, INPUT);
+  pinMode(HALL_SENSE_COL_5, INPUT);
+  pinMode(HALL_SENSE_COL_6, INPUT);
+  pinMode(HALL_SENSE_COL_7, INPUT);
+  pinMode(HALL_SENSE_COL_8, INPUT);
 
-  pinMode(HALL_ROW_S0, OUTPUT);
-  pinMode(HALL_ROW_S1, OUTPUT);
-  pinMode(HALL_ROW_S2, OUTPUT);*/
+  pinMode(HALL_ROW_1, OUTPUT);
+  pinMode(HALL_ROW_2, OUTPUT);
+  pinMode(HALL_ROW_3, OUTPUT);
+  pinMode(HALL_ROW_4, OUTPUT);
+  pinMode(HALL_ROW_5, OUTPUT);
+  pinMode(HALL_ROW_6, OUTPUT);
+  pinMode(HALL_ROW_7, OUTPUT);
+  pinMode(HALL_ROW_8, OUTPUT);
 
-  pinMode(HALL_SENSE, INPUT);
+  digitalWrite(HALL_ROW_1, HIGH);
+  digitalWrite(HALL_ROW_2, HIGH);
+  digitalWrite(HALL_ROW_3, HIGH);
+  digitalWrite(HALL_ROW_4, HIGH);
+  digitalWrite(HALL_ROW_5, HIGH);
+  digitalWrite(HALL_ROW_6, HIGH);
+  digitalWrite(HALL_ROW_7, HIGH);
+  digitalWrite(HALL_ROW_8, HIGH);
 }
 
 /* ---------------------------------------
@@ -88,7 +112,14 @@ void setLEDs(int row, int col)
 void readHall(byte read_hall_array[])
 {
 
-  int hall_val = 0;
+  int hall_val_1 = 0;
+  int hall_val_2 = 0;
+  int hall_val_3 = 0;
+  int hall_val_4 = 0;
+  int hall_val_5 = 0;
+  int hall_val_6 = 0;
+  int hall_val_7 = 0;
+  int hall_val_8 = 0;
 
   for (int k = 0; k < 8; k++)
   {
@@ -98,31 +129,61 @@ void readHall(byte read_hall_array[])
   for (int row_index = 0; row_index < 8; row_index++)
   {
 
-    bool bit0 = ((byte)row_index & (1 << 0)) != 0;
-    bool bit1 = ((byte)row_index & (1 << 1)) != 0;
-    bool bit2 = ((byte)row_index & (1 << 2)) != 0;
-    digitalWrite(HALL_ROW_S0, bit0);
-    digitalWrite(HALL_ROW_S1, bit1);
-    digitalWrite(HALL_ROW_S2, bit2);
+    digitalWrite(HALL_ROW_1, row_index != 0);
+    digitalWrite(HALL_ROW_2, row_index != 1);
+    digitalWrite(HALL_ROW_3, row_index != 2);
+    digitalWrite(HALL_ROW_4, row_index != 3);
+    digitalWrite(HALL_ROW_5, row_index != 4);
+    digitalWrite(HALL_ROW_6, row_index != 5);
+    digitalWrite(HALL_ROW_7, row_index != 6);
+    digitalWrite(HALL_ROW_8, row_index != 7);
 
-    for (int col_index = 0; col_index < 8; col_index++)
+    delay(1);
+    hall_val_1 = analogRead(HALL_SENSE_COL_1);
+    hall_val_2 = analogRead(HALL_SENSE_COL_2);
+    hall_val_3 = analogRead(HALL_SENSE_COL_3);
+    hall_val_4 = analogRead(HALL_SENSE_COL_4);
+    hall_val_5 = analogRead(HALL_SENSE_COL_5);
+    hall_val_6 = analogRead(HALL_SENSE_COL_6);
+    hall_val_7 = analogRead(HALL_SENSE_COL_7);
+    hall_val_8 = analogRead(HALL_SENSE_COL_8);
+/*
+    DEBUG_SERIAL.print("Val1: ");
+    DEBUG_SERIAL.println(hall_val_1);
+    DEBUG_SERIAL.print("Val2: ");
+    DEBUG_SERIAL.println(hall_val_2);
+*/
+    if (hall_val_1 > SENSE_THRS_NO_POWER && (hall_val_1 < SENSE_THRS_NEG || hall_val_1 > SENSE_THRS_POS))
     {
-
-      bool bit0 = ((byte)col_index & (1 << 0)) != 0;
-      bool bit1 = ((byte)col_index & (1 << 1)) != 0;
-      bool bit2 = ((byte)col_index & (1 << 2)) != 0;
-      digitalWrite(HALL_OUT_S0, bit0);
-      digitalWrite(HALL_OUT_S1, bit1);
-      digitalWrite(HALL_OUT_S2, bit2);
-
-      delay(1);
-      hall_val = analogRead(HALL_SENSE);
-
-
-      if (hall_val > SENSE_THRS_NO_POWER && (hall_val < SENSE_THRS_NEG || hall_val > SENSE_THRS_POS))
-      {
-        read_hall_array[row_index] |= 1UL << (col_index);
-      }
+      read_hall_array[row_index] |= 1UL << (0);
+    }
+    if (hall_val_2 > SENSE_THRS_NO_POWER && (hall_val_2 < SENSE_THRS_NEG || hall_val_2 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (1);
+    }
+    if (hall_val_3 > SENSE_THRS_NO_POWER && (hall_val_3 < SENSE_THRS_NEG || hall_val_3 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (2);
+    }
+    if (hall_val_4 > SENSE_THRS_NO_POWER && (hall_val_4 < SENSE_THRS_NEG || hall_val_4 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (3);
+    }
+    if (hall_val_5 > SENSE_THRS_NO_POWER && (hall_val_5 < SENSE_THRS_NEG || hall_val_5 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (4);
+    }
+    if (hall_val_6 > SENSE_THRS_NO_POWER && (hall_val_6 < SENSE_THRS_NEG || hall_val_6 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (5);
+    }
+    if (hall_val_7 > SENSE_THRS_NO_POWER && (hall_val_7 < SENSE_THRS_NEG || hall_val_7 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (6);
+    }
+    if (hall_val_8 > SENSE_THRS_NO_POWER && (hall_val_8 < SENSE_THRS_NEG || hall_val_8 > SENSE_THRS_POS))
+    {
+      read_hall_array[row_index] |= 1UL << (7);
     }
   }
 }
