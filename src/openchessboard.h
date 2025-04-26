@@ -12,14 +12,15 @@
 #include "wifi_client.h"
 #include "lichess_client.h"
 #include "board_driver.h"
-#include <Ticker.h>
 #include "settings_accesspoint.h"
 #include <Preferences.h>
 #include "ble_app.h"
 #include "wifi_app.h"
 #include "puzzle_app.h"
 #include <Update.h>
+#include <esp_ota_ops.h>
 #include <ESPmDNS.h>
+#include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
 
 #ifdef __AVR__
@@ -29,7 +30,7 @@
 // Debug Settings
 //#define MANUAL_MOVE_INPUT
 //#define PLUG_AT_TOP // not fully supported yet
-#define DEBUG true  
+#define DEBUG false  
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 // WiFi variables
@@ -39,22 +40,25 @@ extern char server[];
 extern WiFiClientSecure StreamClient;
 extern WiFiClientSecure PostClient;
 
-extern Ticker timer;
+extern hw_timer_t *timer;
+extern volatile bool timerFlag;
 
 //lichess variables
 extern String username;
 extern String currentGameID;
 extern bool myturn;
-extern String lastMove;
+extern String myLastMove;
+extern String oppLastMove;
+extern String latestMove;
 extern String myMove;
 extern String moves; 
 extern bool is_castling_allowed;
 
 // LED and state variables
-extern bool boot_flipstate;
+extern bool update_flipstate;
 extern bool is_booting;
-extern bool connect_flipstate;
 extern bool is_connecting;
+extern bool is_updating;
 extern bool is_game_running;
 extern bool is_seeking;
 extern bool dimLEDs;

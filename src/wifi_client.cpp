@@ -14,8 +14,9 @@ void wifi_setup(void){
 
   DEBUG_SERIAL.print("Connecting to Wifi");
   while (WiFi.status() != WL_CONNECTED) {
-      delay(100);
+      delay(300);
       DEBUG_SERIAL.print(".");
+      displayConnectWait();
   }
   DEBUG_SERIAL.println("");
   
@@ -72,7 +73,7 @@ String fetchMetaData(const char* metadata_url) {
 
   String response = client.readString();
   client.stop();
-  delay(1000);
+  //delay(1000);
 
   return response;
 }
@@ -84,7 +85,7 @@ bool isNewVersionAvailable(String latest_version) {
     preferences.end();
     DEBUG_SERIAL.printf("Current Version: %s, Latest Version: %s\n", current_version.c_str(), latest_version.c_str());
 
-  return (latest_version > current_version); 
+  return (latest_version != current_version); 
 }
 
 
@@ -202,7 +203,7 @@ bool downloadFirmware(String latest_version) {
                     unsigned long timeout = millis();
                     while (client.available() == 0) {
                         if (millis() - timeout > 5000) {
-                            Serial.println("Timeout waiting for response body");
+                            DEBUG_SERIAL.println("Timeout waiting for response body");
                             client.stop();
                             break;
                         }
@@ -218,6 +219,7 @@ bool downloadFirmware(String latest_version) {
                         totalWritten += written;
                         currentByte += written;
                         DEBUG_SERIAL.printf("Written %d/%d bytes\n", totalWritten, contentLength);
+
                     } else {
                         DEBUG_SERIAL.println("No data available from client. Retrying...");
                         break;
@@ -259,7 +261,10 @@ void wifi_firmwareUpdate() {
           return;
       }
       else{
-        Serial.println("Download firmware:" + latest_version);
+        DEBUG_SERIAL.println("Download firmware:" + latest_version);
+        setStateUpdating();
+        update_flipstate = true;
+        displayUpdateWait();
         if (!downloadFirmware(latest_version)) {
             DEBUG_SERIAL.println("Firmware update failed");
             return;
@@ -273,4 +278,42 @@ void wifi_firmwareUpdate() {
     }
 
 
+}
+
+void validateFirmware() {
+    const esp_partition_t* running = esp_ota_get_running_partition();
+    DEBUG_SERIAL.printf("Running partition: %s\n", running->label);
+
+    esp_ota_img_states_t ota_state;
+    esp_err_t result = esp_ota_get_state_partition(running, &ota_state);
+
+    if (result == ESP_OK) {
+        DEBUG_SERIAL.printf("OTA state: %d\n", ota_state);
+
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+            DEBUG_SERIAL.println("Firmware pending verify...");
+
+            // Do some checks — optional: WiFi, sensors, etc.
+
+            // If all checks pass:
+            esp_err_t valid_result = esp_ota_mark_app_valid_cancel_rollback();
+            if (valid_result == ESP_OK) {
+                DEBUG_SERIAL.println("Firmware marked as valid!");
+            } else {
+                DEBUG_SERIAL.printf("Failed to mark firmware valid: %s\n", esp_err_to_name(valid_result));
+            }
+
+        } else if (ota_state == ESP_OTA_IMG_VALID) {
+            DEBUG_SERIAL.println("Firmware already valid.");
+        } else if (ota_state == ESP_OTA_IMG_INVALID) {
+            DEBUG_SERIAL.println("Firmware marked as invalid.");
+        } else if (ota_state == ESP_OTA_IMG_ABORTED) {
+            DEBUG_SERIAL.println("Firmware update was aborted.");
+        } else {
+            DEBUG_SERIAL.printf("Unknown OTA state: %d\n", ota_state);
+        }
+
+    } else {
+        DEBUG_SERIAL.printf("Failed to get OTA state: %s\n", esp_err_to_name(result));
+    }
 }

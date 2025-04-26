@@ -1,62 +1,77 @@
 
 #include "openchessboard.h"
 
-/* ---------------------------------------
-    interupt handler function. Changes LED states for booting and connection sequence.
-    When game is running, this function periodically checks for the game status from
-    the stream of the StreamClient.
-    @params[in] void
-    @return void
-*/
+hw_timer_t *timer = NULL;
+volatile bool timerFlag = false;
 
-void timerCallback(void)
-{
+// Interrupt Service Routine (ISR)
+void IRAM_ATTR onTimer() {
+  timerFlag = true;  // Set flag to indicate interrupt
+}
+              
+void gameTimerHandler() {
+  DEBUG_SERIAL.println(".");
 
-  if (is_booting)
-  {
-    displayBootWait();
-    boot_flipstate = !boot_flipstate;
+  if (WiFi.status() != WL_CONNECTED){
+    DEBUG_SERIAL.println("lost connection...restarting...");
+    ESP.restart();
   }
 
-  if (is_connecting)
-  { 
-    displayConnectWait();
-    connect_flipstate = !connect_flipstate;
+  if (!StreamClient.available()){
+    return;
   }
 
-  if (is_game_running && !is_booting && !is_connecting)
-  {
-    
     char* char_response = catchResponseFromClient(StreamClient);
+    //DEBUG_SERIAL.println(char_response);
 
-    String moves = parseValueFromResponse(char_response, "moves");
-    String game_status = parseValueFromResponse(char_response, "status");
+    JsonDocument doc;
+    String moves_temp;
+    String latestMove_temp = "";
+    String game_status = "";
 
-    // Detect Game restart
-    if (game_status != "started" && game_status != "no")
-    {
-      DEBUG_SERIAL.print("Game Status: ");
-      DEBUG_SERIAL.println(game_status);
-      setStateConnecting();
-      return;
+    if (parseJsonResponse(char_response, doc)) {
+        
+        moves_temp = doc["state"]["moves"].as<String>();
+        game_status = doc["state"]["status"].as<String>();
+
+        if (moves_temp == "null" | moves_temp == "" ){
+          moves_temp = doc["moves"].as<String>();
+          game_status = doc["status"].as<String>();
+        }
+
+      	if (moves_temp == "null" | moves_temp == "" ){
+          return;
+        }
+
+        moves = moves_temp;
+        DEBUG_SERIAL.println(moves);
+
+        latestMove = moves.substring(moves.length() - 4);
+
+        if (latestMove == myLastMove){ 
+          myturn = false;
+        }
+        else{
+          myturn = true;
+          oppLastMove = latestMove;
+        }
+
+        if (game_status == "started")
+        {
+          is_game_running = true;
+        }
+        
+        if (moves.length() > 3 & game_status != "started"){
+          is_game_running = false;
+          is_seeking = false;
+          myturn = false;
+        }
+          
     }
 
-    // Check Move
-    if (moves.length() > 3)
-    {
-      DEBUG_SERIAL.print("move received: ");
-      int startstr = moves.length() - 4; 
-      lastMove = moves.substring(startstr);
-      DEBUG_SERIAL.println(lastMove);
-    }
     
-    if (lastMove != myMove)
-    {
-      myturn = true;
-    }
-  }
-}                   
-
+  
+}
 
 
 /* ---------------------------------------
@@ -66,13 +81,22 @@ void timerCallback(void)
     @return void
 */
 void isr_setup(void) {
-  timer.attach(0.3, timerCallback);
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 100000, true);
+  timerAlarmEnable(timer);
 }
 
-void disableISR() {
-  timer.detach(); // This will stop the timer from calling the callback
+void disableGameTimer() {
+  timerAlarmDisable(timer);
 }
 
-void enableISR() {
-  timer.attach(0.3, timerCallback); // This will re-enable the timer callback
+void enableGameTimer() {
+  timerAlarmEnable(timer);
+}
+void moveStreamHandler() {
+  if (timerFlag) {
+    gameTimerHandler();      
+    timerFlag = false;
+  }
 }

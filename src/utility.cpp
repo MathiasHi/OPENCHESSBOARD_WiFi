@@ -25,8 +25,7 @@ void checkCastling(String move_input) {
    
    //wait until move was rook move from castling
    while(is_castling && is_game_running){
-    
-    displayMove(lastMove);
+    displayMove(myLastMove);
     move_input = getMoveInput();
     DEBUG_SERIAL.println(move_input);
     
@@ -48,15 +47,33 @@ void checkCastling(String move_input) {
 */
 void setStateBooting(void){
   is_game_running = false;
-  is_booting = false;
-  is_connecting = true;
-  lastMove = "xx";
-  myMove = "xx";
-  moves = "no";
-  currentGameID = "no";
-  myturn = false;
+  is_booting = true;
+  is_connecting = false;
+  is_updating = false;
+  is_seeking = false;   
+  myLastMove = "xx";
+  oppLastMove = "xy";
+  latestMove = "zz";
+  myMove = "noMove";
+  moves = "noMoves";
+  currentGameID = "noGameID";
+  //myturn = false;
 }
 
+void setStateUpdating(void){
+  is_game_running = false;
+  is_booting = false;
+  is_connecting = false;
+  is_updating = true;
+  is_seeking = false;   
+  myLastMove = "xx";
+  oppLastMove = "xy";
+  latestMove = "zz";
+  myMove = "yy";
+  moves = "";
+  currentGameID = "noGameID";
+  //myturn = false;
+}
 /* ---------------------------------------
  *  function to set connecting state and initializes state variables
  *  @params[in] void
@@ -66,17 +83,23 @@ void setStateConnecting(void){
   is_game_running = false;
   is_booting = false;
   is_connecting  = true;
-  lastMove = "xx";
-  myMove = "xx";
-  moves = "no";
-  currentGameID = "no";
-  myturn = false;
+  is_updating = false;
+  is_seeking = false;   
+  myLastMove = "xx";
+  oppLastMove = "xy";
+  latestMove = "zz";
+  myMove = "yy";
+  moves = "";
+  currentGameID = "noGameID";
+  //myturn = false;
 }
 
 void setStatePlaying(void){
   is_seeking = false;    
   is_game_running = true;
+  is_updating = false;
   is_connecting = false;
+  displayNewGame();
 }
 
 String urlDecode(const String &encoded) {
@@ -119,15 +142,23 @@ void readSettings(void){
     DEBUG_SERIAL.println("Game Mode: " + board_gameMode);
     DEBUG_SERIAL.println("Startup Type: " + board_startupType);
   } else {
-    Serial.println("No settings found, using default values.");
+    DEBUG_SERIAL.println("No settings found, using default values.");
   }
   preferences.end();
 }
 
 bool isStartingPosition(void){
   byte read_hall_array[8];
+  byte diff_pattern[8];
   byte pattern1[8];
   memset(pattern1, 0xC3, sizeof(pattern1));
+  readHall(read_hall_array);
+
+  calculateDifference(diff_pattern, read_hall_array, pattern1);
+  rotate180(diff_pattern);
+  dimLEDs = true;
+  displayArray(diff_pattern);
+
   if (memcmp(read_hall_array, pattern1, 8) == 0){
     return true;
   }

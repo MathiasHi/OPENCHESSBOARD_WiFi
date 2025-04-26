@@ -159,7 +159,6 @@ void readHall(byte read_hall_array[])
 
   for (int row_index = 0; row_index < 8; row_index++)
   {
-
     digitalWrite(HALL_ROW_1, row_index != 0);
     digitalWrite(HALL_ROW_2, row_index != 1);
     digitalWrite(HALL_ROW_3, row_index != 2);
@@ -308,6 +307,9 @@ String getMoveInput(void)
         }
       }
     }
+    if (StreamClient.available()){
+      moveStreamHandler();
+    }
   }
 
   shiftOut(ledBoardState);
@@ -346,6 +348,9 @@ String getMoveInput(void)
         }
       }
     }
+    if (StreamClient.available()){
+      moveStreamHandler();
+    }
   }
 
   shiftOut(ledBoardState);
@@ -360,8 +365,8 @@ String getMoveInput(void)
   }
 
   delay(300);
-#endif
-
+  #endif
+  clearDisplay();
   return mvInput;
 }
 
@@ -452,7 +457,7 @@ void clearDisplay(void)
 }
 
 /* ---------------------------------------
- *  Function that displays connection animation.
+ *  Function that displays vection animation.
  *  Writes to specific shift registers and flips states periodically by isr.
  *  @params[in] void
  *  @return void
@@ -461,16 +466,11 @@ void displayConnectWait(void)
 {
   byte connect_led_array[8] = {0};
 
-  if (connect_flipstate)
-  {
-    connect_led_array[3] = 0x10;
-    connect_led_array[4] = 0x08;
+
+  if (update_flipstate) {
+    connect_led_array[0] = 0x10;
   }
-  else
-  {
-    connect_led_array[4] = 0x10;
-    connect_led_array[3] = 0x08;
-  }
+  update_flipstate ^= true;
 
   shiftOut(connect_led_array);
   if (dimLEDs)
@@ -542,14 +542,10 @@ void displayBootWait(void)
 {
   byte boot_led_array[8] = {0};
 
-  if (boot_flipstate)
-  {
-#ifdef PLUG_AT_TOP
-    boot_led_array[3] = 0x01;
-#else
+  if (update_flipstate) {
     boot_led_array[0] = 0x10;
-#endif
   }
+  update_flipstate ^= true;
 
   shiftOut(boot_led_array);
   DEBUG_SERIAL.println();
@@ -561,8 +557,27 @@ void displayBootWait(void)
   {
     strip.setBrightness(BRIGHTNESS);
   }
+}
 
-  delay(100);
+void displayUpdateWait(void) {
+  byte update_led_array[8] = {0};
+
+  if (update_flipstate) {
+    update_led_array[0] = 0x80;
+  }
+  update_flipstate ^= true;
+
+  shiftOut(update_led_array);
+  DEBUG_SERIAL.println();
+
+  if (dimLEDs)
+  {
+    strip.setBrightness(150);
+  }
+  else
+  {
+    strip.setBrightness(BRIGHTNESS);
+  }
 }
 
 /* ---------------------------------------
@@ -580,13 +595,37 @@ void displayMove(String last_move)
   setDisplayMove(led_test_array, last_move);
 
   shiftOut(led_test_array);
-  if (dimLEDs)
-  {
+  if (dimLEDs){
     strip.setBrightness(150);
   }
   else
   {
     strip.setBrightness(BRIGHTNESS);
+  }
+
+}
+
+void calculateDifference(byte result[], byte a[], byte b[]) {
+  for (int i = 0; i < 8; i++) {
+    result[i] = b[i] & ~a[i];
+  }
+}
+
+void rotate180(byte arr[8]) {
+  for (int i = 0; i < 4; i++) {
+    // Reverse the bits in the byte at arr[i] and arr[7-i] and swap them
+    byte temp = arr[i];
+    arr[i] = arr[7 - i];
+    arr[7 - i] = temp;
+
+    // Reverse the bits in each byte after swapping
+    arr[i] = (arr[i] & 0xF0) >> 4 | (arr[i] & 0x0F) << 4;
+    arr[i] = (arr[i] & 0xCC) >> 2 | (arr[i] & 0x33) << 2;
+    arr[i] = (arr[i] & 0xAA) >> 1 | (arr[i] & 0x55) << 1;
+
+    arr[7 - i] = (arr[7 - i] & 0xF0) >> 4 | (arr[7 - i] & 0x0F) << 4;
+    arr[7 - i] = (arr[7 - i] & 0xCC) >> 2 | (arr[7 - i] & 0x33) << 2;
+    arr[7 - i] = (arr[7 - i] & 0xAA) >> 1 | (arr[7 - i] & 0x55) << 1;
   }
 }
 
@@ -696,4 +735,14 @@ void displayWaitForGame(void)
   displayFrame(step1);
   delay(80);
   clearDisplay();
+}
+
+
+void displayMoveRecect(String move){
+  for (int k = 0; k < 3; k++){
+    clearDisplay();
+    delay(200);
+    displayMove(move);
+    delay(200); 
+  }
 }
