@@ -3,7 +3,7 @@
 // LED Settings
 #define NUM_LEDS 256
 #define BRIGHTNESS 255
-CRGB leds[NUM_LEDS];
+bool leds[NUM_LEDS];
 
 // HW GPIO configuration
 const uint8_t LED_DATA_PIN = D2;
@@ -26,8 +26,10 @@ const uint8_t HALL_ROW_6 = D8;
 const uint8_t HALL_ROW_7 = D9;
 const uint8_t HALL_ROW_8 = D10;
 
-#define SENSE_THRS_NEG 1500
-#define SENSE_THRS_POS 2200
+Adafruit_NeoPixel strip(NUM_LEDS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+#define SENSE_THRS_NEG 1400
+#define SENSE_THRS_POS 2600
 #define SENSE_THRS_NO_POWER 400
 
 /* ---------------------------------------
@@ -41,8 +43,9 @@ void initHW(void)
 {
   DEBUG_SERIAL.println("init HW");
 
-  FastLED.addLeds<WS2812B, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(BRIGHTNESS);
+  strip.begin();
+  strip.show(); // Initialize all pixels to 'off'
+  strip.setBrightness(BRIGHTNESS);
 
   pinMode(HALL_SENSE_COL_1, INPUT);
   pinMode(HALL_SENSE_COL_2, INPUT);
@@ -70,6 +73,7 @@ void initHW(void)
   digitalWrite(HALL_ROW_6, HIGH);
   digitalWrite(HALL_ROW_7, HIGH);
   digitalWrite(HALL_ROW_8, HIGH);
+  delay(100);
 }
 
 /* ---------------------------------------
@@ -80,8 +84,11 @@ void initHW(void)
  */
 void shiftOut(byte led_data_array[])
 {
-  FastLED.clear();
-
+  
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i] = false;
+  }
   for (int i = 0; i < 8; i++)
   {
     for (int k = 0; k < 8; k++)
@@ -92,15 +99,47 @@ void shiftOut(byte led_data_array[])
       }
     }
   }
-  FastLED.show();
+  strip.clear();
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    if (leds[i])
+    {
+      strip.setPixelColor(i, strip.Color(random(255), random(255), random(255)));
+    }
+  }
+  strip.show();
+  delay(1);
 }
 
 void setLEDs(int row, int col)
 {
-  leds[row * 32 + (col * 2)] = CRGB::Red;
-  leds[row * 32 + (col * 2) + 1] = CRGB::Red;
-  leds[((((row + 1) * 32 - 1) - (col * 2)))] = CRGB::Red;
-  leds[((((row + 1) * 32 - 2) - (col * 2)))] = CRGB::Red;
+  int col_turn = 7 - col;
+  int row_turn = 7 - row;
+
+  leds[row_turn * 32 + (col_turn * 2)] = true;
+  leds[row_turn * 32 + (col_turn * 2) + 1] = true;
+  leds[((((row_turn + 1) * 32 - 1) - (col_turn * 2)))] = true;
+  leds[((((row_turn + 1) * 32 - 2) - (col_turn * 2)))] = true;
+
+/*
+  DEBUG_SERIAL.println();
+  DEBUG_SERIAL.println(row_turn * 32 + (col_turn * 2) + 1);
+  DEBUG_SERIAL.println(((((row_turn + 1) * 32 - 1) - (col_turn * 2))));
+  for (int i = 0; i < 256; i++)
+  {
+    if (leds[i])
+    {
+      DEBUG_SERIAL.print("1");
+    }
+    else
+    {
+      DEBUG_SERIAL.print("0");
+    }
+    if ((i % 16) == 15)
+    {
+      DEBUG_SERIAL.println();
+    }
+  }*/  
 }
 
 /* ---------------------------------------
@@ -111,15 +150,7 @@ void setLEDs(int row, int col)
  */
 void readHall(byte read_hall_array[])
 {
-
-  int hall_val_1 = 0;
-  int hall_val_2 = 0;
-  int hall_val_3 = 0;
-  int hall_val_4 = 0;
-  int hall_val_5 = 0;
-  int hall_val_6 = 0;
-  int hall_val_7 = 0;
-  int hall_val_8 = 0;
+  int hall_val[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
   for (int k = 0; k < 8; k++)
   {
@@ -138,54 +169,47 @@ void readHall(byte read_hall_array[])
     digitalWrite(HALL_ROW_7, row_index != 6);
     digitalWrite(HALL_ROW_8, row_index != 7);
 
-    delay(1);
-    hall_val_1 = analogRead(HALL_SENSE_COL_1);
-    hall_val_2 = analogRead(HALL_SENSE_COL_2);
-    hall_val_3 = analogRead(HALL_SENSE_COL_3);
-    hall_val_4 = analogRead(HALL_SENSE_COL_4);
-    hall_val_5 = analogRead(HALL_SENSE_COL_5);
-    hall_val_6 = analogRead(HALL_SENSE_COL_6);
-    hall_val_7 = analogRead(HALL_SENSE_COL_7);
-    hall_val_8 = analogRead(HALL_SENSE_COL_8);
-/*
-    DEBUG_SERIAL.print("Val1: ");
-    DEBUG_SERIAL.println(hall_val_1);
-    DEBUG_SERIAL.print("Val2: ");
-    DEBUG_SERIAL.println(hall_val_2);
-*/
-    if (hall_val_1 > SENSE_THRS_NO_POWER && (hall_val_1 < SENSE_THRS_NEG || hall_val_1 > SENSE_THRS_POS))
+    delay(10);
+    hall_val[0] = analogRead(HALL_SENSE_COL_1);
+    hall_val[1] = analogRead(HALL_SENSE_COL_2);
+    hall_val[2] = analogRead(HALL_SENSE_COL_3);
+    hall_val[3] = analogRead(HALL_SENSE_COL_4);
+    hall_val[4] = analogRead(HALL_SENSE_COL_5);
+    hall_val[5] = analogRead(HALL_SENSE_COL_6);
+    hall_val[6] = analogRead(HALL_SENSE_COL_7);
+    hall_val[7] = analogRead(HALL_SENSE_COL_8);
+
+    digitalWrite(HALL_ROW_1, HIGH);
+    digitalWrite(HALL_ROW_2, HIGH);
+    digitalWrite(HALL_ROW_3, HIGH);
+    digitalWrite(HALL_ROW_4, HIGH);
+    digitalWrite(HALL_ROW_5, HIGH);
+    digitalWrite(HALL_ROW_6, HIGH);
+    digitalWrite(HALL_ROW_7, HIGH);
+    digitalWrite(HALL_ROW_8, HIGH);
+
+    /*for (int z = 0; z < 8; z++)
     {
-      read_hall_array[row_index] |= 1UL << (0);
+      DEBUG_SERIAL.print(hall_val[z]);
+      DEBUG_SERIAL.print(";");
     }
-    if (hall_val_2 > SENSE_THRS_NO_POWER && (hall_val_2 < SENSE_THRS_NEG || hall_val_2 > SENSE_THRS_POS))
+    DEBUG_SERIAL.println();*/
+
+    for (int z = 0; z < 8; z++)
     {
-      read_hall_array[row_index] |= 1UL << (1);
-    }
-    if (hall_val_3 > SENSE_THRS_NO_POWER && (hall_val_3 < SENSE_THRS_NEG || hall_val_3 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (2);
-    }
-    if (hall_val_4 > SENSE_THRS_NO_POWER && (hall_val_4 < SENSE_THRS_NEG || hall_val_4 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (3);
-    }
-    if (hall_val_5 > SENSE_THRS_NO_POWER && (hall_val_5 < SENSE_THRS_NEG || hall_val_5 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (4);
-    }
-    if (hall_val_6 > SENSE_THRS_NO_POWER && (hall_val_6 < SENSE_THRS_NEG || hall_val_6 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (5);
-    }
-    if (hall_val_7 > SENSE_THRS_NO_POWER && (hall_val_7 < SENSE_THRS_NEG || hall_val_7 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (6);
-    }
-    if (hall_val_8 > SENSE_THRS_NO_POWER && (hall_val_8 < SENSE_THRS_NEG || hall_val_8 > SENSE_THRS_POS))
-    {
-      read_hall_array[row_index] |= 1UL << (7);
+      if (hall_val[z] > SENSE_THRS_NO_POWER && (hall_val[z] < SENSE_THRS_NEG || hall_val[z] > SENSE_THRS_POS))
+      {
+        read_hall_array[row_index] |= 1UL << (z);
+      }
     }
   }
+  /*for (int z = 0; z < 8; z++)
+  {
+    DEBUG_SERIAL.println(read_hall_array[z], BIN);
+  }
+  DEBUG_SERIAL.println();
+  DEBUG_SERIAL.println();
+  delay(1500);*/
 }
 
 void rotate90CounterClockwise(uint8_t hallBoardState[8])
@@ -328,11 +352,11 @@ String getMoveInput(void)
 
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN , 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN , 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 
   delay(300);
@@ -383,7 +407,6 @@ String getFen(void)
   byte hallBoardState[8];
   readHall(hallBoardState);
   rotate90CounterClockwise(hallBoardState);
-
   return getPiecesPlacement(hallBoardState);
 }
 
@@ -452,11 +475,11 @@ void displayConnectWait(void)
   shiftOut(connect_led_array);
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN , 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN , 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 }
 
@@ -532,11 +555,11 @@ void displayBootWait(void)
   DEBUG_SERIAL.println();
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN, 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN, 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 
   delay(100);
@@ -552,16 +575,18 @@ void displayMove(String last_move)
 {
   byte led_test_array[8] = {0};
 
+  DEBUG_SERIAL.println("Last Move: " + last_move);
+
   setDisplayMove(led_test_array, last_move);
 
   shiftOut(led_test_array);
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN, 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN, 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 }
 
@@ -570,11 +595,11 @@ void displayArray(byte ledBoardState[])
   shiftOut(ledBoardState);
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN, 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN, 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 }
 
@@ -583,11 +608,11 @@ void displayFrame(byte frame[8])
   shiftOut(frame);
   if (dimLEDs)
   {
-    // analogWrite(LED_OE_N_PIN, 150);
+    strip.setBrightness(150);
   }
   else
   {
-    // digitalWrite(LED_OE_N_PIN, 0);
+    strip.setBrightness(BRIGHTNESS);
   }
 
   delay(100);
