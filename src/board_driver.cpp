@@ -29,7 +29,7 @@ const uint8_t HALL_ROW_8 = D10;
 Adafruit_NeoPixel strip(NUM_LEDS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 #define SENSE_THRS_NEG 1400
-#define SENSE_THRS_POS 2600
+#define SENSE_THRS_POS 2500
 #define SENSE_THRS_NO_POWER 400
 
 /* ---------------------------------------
