@@ -3,7 +3,7 @@
 // LED Settings
 #define NUM_LEDS 256
 #define BRIGHTNESS 255
-bool leds[NUM_LEDS];
+uint32_t leds[NUM_LEDS];
 
 // HW GPIO configuration
 const uint8_t LED_DATA_PIN = D2;
@@ -28,9 +28,8 @@ const uint8_t HALL_ROW_8 = D10;
 
 Adafruit_NeoPixel strip(NUM_LEDS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
-#define SENSE_THRS_NEG 1400
-#define SENSE_THRS_POS 2500
-#define SENSE_THRS_NO_POWER 400
+#define SENSE_THRS_NEG 2300
+#define SENSE_THRS_POS 2600
 
 /* ---------------------------------------
  *  Function to initiate GPIOs.
@@ -84,62 +83,64 @@ void initHW(void)
  */
 void shiftOut(byte led_data_array[])
 {
-  
-  for (int i = 0; i < NUM_LEDS; i++)
-  {
-    leds[i] = false;
-  }
+
+  strip.clear();
+
   for (int i = 0; i < 8; i++)
   {
     for (int k = 0; k < 8; k++)
     {
       if (led_data_array[i] & (1 << k))
       {
-        setLEDs(i, k);
+        setLEDs(i, k, strip.Color(0, 0, 255));
+      }
+      else
+      {
+        uint index = i + k;
+
+        if (index % 2 == 0)
+        {
+          setLEDs(i, k, strip.Color(30, 30, 30));
+        }
+        else
+        {
+          setLEDs(i, k, strip.Color(0, 30, 0));
+        }
       }
     }
   }
-  strip.clear();
-  for (int i = 0; i < NUM_LEDS; i++)
+
+  for (int z = 0; z < NUM_LEDS; z++)
   {
-    if (leds[i])
-    {
-      strip.setPixelColor(i, strip.Color(random(255), random(255), random(255)));
-    }
+    strip.setPixelColor(z, leds[z]);
   }
+
   strip.show();
   delay(1);
 }
 
-void setLEDs(int row, int col)
+void setLEDs(int row, int col, uint32_t color)
 {
   int col_turn = 7 - col;
   int row_turn = 7 - row;
 
-  leds[row_turn * 32 + (col_turn * 2)] = true;
-  leds[row_turn * 32 + (col_turn * 2) + 1] = true;
-  leds[((((row_turn + 1) * 32 - 1) - (col_turn * 2)))] = true;
-  leds[((((row_turn + 1) * 32 - 2) - (col_turn * 2)))] = true;
+  leds[row_turn * 32 + (col_turn * 2)] = color;
+  leds[row_turn * 32 + (col_turn * 2) + 1] = color;
+  leds[((((row_turn + 1) * 32 - 1) - (col_turn * 2)))] = color;
+  leds[((((row_turn + 1) * 32 - 2) - (col_turn * 2)))] = color;
 
-/*
-  DEBUG_SERIAL.println();
-  DEBUG_SERIAL.println(row_turn * 32 + (col_turn * 2) + 1);
-  DEBUG_SERIAL.println(((((row_turn + 1) * 32 - 1) - (col_turn * 2))));
-  for (int i = 0; i < 256; i++)
-  {
-    if (leds[i])
+  /*
+    DEBUG_SERIAL.println();
+    for (int i = 0; i < 256; i++)
     {
-      DEBUG_SERIAL.print("1");
-    }
-    else
-    {
-      DEBUG_SERIAL.print("0");
-    }
-    if ((i % 16) == 15)
-    {
-      DEBUG_SERIAL.println();
-    }
-  }*/  
+
+        DEBUG_SERIAL.print(leds[i]);
+
+      if ((i % 16) == 15)
+      {
+        DEBUG_SERIAL.println();
+      }
+    }*/
 }
 
 /* ---------------------------------------
@@ -151,11 +152,6 @@ void setLEDs(int row, int col)
 void readHall(byte read_hall_array[])
 {
   int hall_val[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-  for (int k = 0; k < 8; k++)
-  {
-    read_hall_array[k] = 0x00;
-  }
 
   for (int row_index = 0; row_index < 8; row_index++)
   {
@@ -187,28 +183,33 @@ void readHall(byte read_hall_array[])
     digitalWrite(HALL_ROW_7, HIGH);
     digitalWrite(HALL_ROW_8, HIGH);
 
-    /*for (int z = 0; z < 8; z++)
+    for (int z = 0; z < 8; z++)
     {
       DEBUG_SERIAL.print(hall_val[z]);
       DEBUG_SERIAL.print(";");
     }
-    DEBUG_SERIAL.println();*/
+    DEBUG_SERIAL.println();
 
-    for (int z = 0; z < 8; z++)
+    for (int j = 0; j < 8; j++)
     {
-      if (hall_val[z] > SENSE_THRS_NO_POWER && (hall_val[z] < SENSE_THRS_NEG || hall_val[z] > SENSE_THRS_POS))
+      if (hall_val[j] < SENSE_THRS_NEG && (read_hall_array[row_index] & (1UL << (j))) > 0)
       {
-        read_hall_array[row_index] |= 1UL << (z);
+        read_hall_array[row_index] &= ~(1UL << (j));
+      }
+      else if (hall_val[j] > SENSE_THRS_POS && (read_hall_array[row_index] & (1UL << (j))) == 0 )
+      {
+        read_hall_array[row_index] |= 1UL << (j);
       }
     }
   }
-  /*for (int z = 0; z < 8; z++)
+  DEBUG_SERIAL.println();
+  for (int z = 0; z < 8; z++)
   {
     DEBUG_SERIAL.println(read_hall_array[z], BIN);
   }
   DEBUG_SERIAL.println();
   DEBUG_SERIAL.println();
-  delay(1500);*/
+  delay(500);
 }
 
 void rotate90CounterClockwise(uint8_t hallBoardState[8])
@@ -307,7 +308,8 @@ String getMoveInput(void)
         }
       }
     }
-    if (StreamClient.available()){
+    if (StreamClient.available())
+    {
       moveStreamHandler();
     }
   }
@@ -348,7 +350,8 @@ String getMoveInput(void)
         }
       }
     }
-    if (StreamClient.available()){
+    if (StreamClient.available())
+    {
       moveStreamHandler();
     }
   }
@@ -365,7 +368,7 @@ String getMoveInput(void)
   }
 
   delay(300);
-  #endif
+#endif
   clearDisplay();
   return mvInput;
 }
@@ -466,8 +469,8 @@ void displayConnectWait(void)
 {
   byte connect_led_array[8] = {0};
 
-
-  if (update_flipstate) {
+  if (update_flipstate)
+  {
     connect_led_array[0] = 0x10;
   }
   update_flipstate ^= true;
@@ -542,7 +545,8 @@ void displayBootWait(void)
 {
   byte boot_led_array[8] = {0};
 
-  if (update_flipstate) {
+  if (update_flipstate)
+  {
     boot_led_array[0] = 0x10;
   }
   update_flipstate ^= true;
@@ -559,10 +563,12 @@ void displayBootWait(void)
   }
 }
 
-void displayUpdateWait(void) {
+void displayUpdateWait(void)
+{
   byte update_led_array[8] = {0};
 
-  if (update_flipstate) {
+  if (update_flipstate)
+  {
     update_led_array[0] = 0x80;
   }
   update_flipstate ^= true;
@@ -590,29 +596,31 @@ void displayMove(String last_move)
 {
   byte led_test_array[8] = {0};
 
-  DEBUG_SERIAL.println("Last Move: " + last_move);
-
   setDisplayMove(led_test_array, last_move);
 
   shiftOut(led_test_array);
-  if (dimLEDs){
+  if (dimLEDs)
+  {
     strip.setBrightness(150);
   }
   else
   {
     strip.setBrightness(BRIGHTNESS);
   }
-
 }
 
-void calculateDifference(byte result[], byte a[], byte b[]) {
-  for (int i = 0; i < 8; i++) {
+void calculateDifference(byte result[], byte a[], byte b[])
+{
+  for (int i = 0; i < 8; i++)
+  {
     result[i] = b[i] & ~a[i];
   }
 }
 
-void rotate180(byte arr[8]) {
-  for (int i = 0; i < 4; i++) {
+void rotate180(byte arr[8])
+{
+  for (int i = 0; i < 4; i++)
+  {
     // Reverse the bits in the byte at arr[i] and arr[7-i] and swap them
     byte temp = arr[i];
     arr[i] = arr[7 - i];
@@ -737,12 +745,13 @@ void displayWaitForGame(void)
   clearDisplay();
 }
 
-
-void displayMoveRecect(String move){
-  for (int k = 0; k < 3; k++){
+void displayMoveRecect(String move)
+{
+  for (int k = 0; k < 3; k++)
+  {
     clearDisplay();
     delay(200);
     displayMove(move);
-    delay(200); 
+    delay(200);
   }
 }

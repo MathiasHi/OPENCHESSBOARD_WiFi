@@ -1,6 +1,7 @@
 #pragma once
 
 #define BOARD_USES_HW_GPIO_NUMBERS
+#define BLE_CHESS_DEBUG_LOGS
 
 #include <Arduino.h>
 #include <FreeRTOS.h>
@@ -30,7 +31,7 @@
 // Debug Settings
 //#define MANUAL_MOVE_INPUT
 //#define PLUG_AT_TOP // not fully supported yet
-#define DEBUG false  
+#define DEBUG true  
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 // WiFi variables
