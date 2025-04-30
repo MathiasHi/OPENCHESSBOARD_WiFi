@@ -29,7 +29,15 @@ const uint8_t HALL_ROW_8 = D10;
 Adafruit_NeoPixel strip(NUM_LEDS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 #define SENSE_THRS_NEG 2300
-#define SENSE_THRS_POS 2600
+#define SENSE_THRS_POS 2400
+#define NUM_READ 5
+#define NUM_ANALOG 8
+
+uint16_t reads[NUM_ANALOG][NUM_ANALOG][NUM_READ];
+uint16_t readIndex[NUM_ANALOG][NUM_ANALOG];
+uint16_t total[NUM_ANALOG][NUM_ANALOG];
+uint16_t average[NUM_ANALOG][NUM_ANALOG];
+int read_init = 0;
 
 /* ---------------------------------------
  *  Function to initiate GPIOs.
@@ -41,6 +49,20 @@ Adafruit_NeoPixel strip(NUM_LEDS, LED_DATA_PIN, NEO_GRB + NEO_KHZ800);
 void initHW(void)
 {
   DEBUG_SERIAL.println("init HW");
+
+  for (int z = 0; z < NUM_ANALOG; z++)
+  {
+    for (int i = 0; i < NUM_ANALOG; i++)
+    {
+      readIndex[i][z] = 0;
+      total[i][z] = 0;
+      average[i][z] = 0;
+      for (int j = 0; j < NUM_READ; j++)
+      {
+        reads[i][z][j] = 0;
+      }
+    }
+  }
 
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
@@ -151,65 +173,87 @@ void setLEDs(int row, int col, uint32_t color)
  */
 void readHall(byte read_hall_array[])
 {
-  int hall_val[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-  for (int row_index = 0; row_index < 8; row_index++)
+  for (int meassure = 0; meassure < NUM_READ; meassure++)
   {
-    digitalWrite(HALL_ROW_1, row_index != 0);
-    digitalWrite(HALL_ROW_2, row_index != 1);
-    digitalWrite(HALL_ROW_3, row_index != 2);
-    digitalWrite(HALL_ROW_4, row_index != 3);
-    digitalWrite(HALL_ROW_5, row_index != 4);
-    digitalWrite(HALL_ROW_6, row_index != 5);
-    digitalWrite(HALL_ROW_7, row_index != 6);
-    digitalWrite(HALL_ROW_8, row_index != 7);
+    int hall_val[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    delay(10);
-    hall_val[0] = analogRead(HALL_SENSE_COL_1);
-    hall_val[1] = analogRead(HALL_SENSE_COL_2);
-    hall_val[2] = analogRead(HALL_SENSE_COL_3);
-    hall_val[3] = analogRead(HALL_SENSE_COL_4);
-    hall_val[4] = analogRead(HALL_SENSE_COL_5);
-    hall_val[5] = analogRead(HALL_SENSE_COL_6);
-    hall_val[6] = analogRead(HALL_SENSE_COL_7);
-    hall_val[7] = analogRead(HALL_SENSE_COL_8);
-
-    digitalWrite(HALL_ROW_1, HIGH);
-    digitalWrite(HALL_ROW_2, HIGH);
-    digitalWrite(HALL_ROW_3, HIGH);
-    digitalWrite(HALL_ROW_4, HIGH);
-    digitalWrite(HALL_ROW_5, HIGH);
-    digitalWrite(HALL_ROW_6, HIGH);
-    digitalWrite(HALL_ROW_7, HIGH);
-    digitalWrite(HALL_ROW_8, HIGH);
-
-    for (int z = 0; z < 8; z++)
+    if (read_init < NUM_READ)
     {
-      DEBUG_SERIAL.print(hall_val[z]);
-      DEBUG_SERIAL.print(";");
+      read_init++;
     }
-    DEBUG_SERIAL.println();
 
-    for (int j = 0; j < 8; j++)
+    for (int row_index = 0; row_index < 8; row_index++)
     {
-      if (hall_val[j] < SENSE_THRS_NEG && (read_hall_array[row_index] & (1UL << (j))) > 0)
+      digitalWrite(HALL_ROW_1, row_index != 0);
+      digitalWrite(HALL_ROW_2, row_index != 1);
+      digitalWrite(HALL_ROW_3, row_index != 2);
+      digitalWrite(HALL_ROW_4, row_index != 3);
+      digitalWrite(HALL_ROW_5, row_index != 4);
+      digitalWrite(HALL_ROW_6, row_index != 5);
+      digitalWrite(HALL_ROW_7, row_index != 6);
+      digitalWrite(HALL_ROW_8, row_index != 7);
+
+      delay(1);
+      hall_val[0] = analogRead(HALL_SENSE_COL_1);
+      hall_val[1] = analogRead(HALL_SENSE_COL_2);
+      hall_val[2] = analogRead(HALL_SENSE_COL_3);
+      hall_val[3] = analogRead(HALL_SENSE_COL_4);
+      hall_val[4] = analogRead(HALL_SENSE_COL_5);
+      hall_val[5] = analogRead(HALL_SENSE_COL_6);
+      hall_val[6] = analogRead(HALL_SENSE_COL_7);
+      hall_val[7] = analogRead(HALL_SENSE_COL_8);
+
+      for (int j = 0; j < 8; j++)
       {
-        read_hall_array[row_index] &= ~(1UL << (j));
-      }
-      else if (hall_val[j] > SENSE_THRS_POS && (read_hall_array[row_index] & (1UL << (j))) == 0 )
-      {
-        read_hall_array[row_index] |= 1UL << (j);
+
+        total[j][row_index] = total[j][row_index] - reads[j][row_index][readIndex[j][row_index]];
+        reads[j][row_index][readIndex[j][row_index]] = hall_val[j];
+        total[j][row_index] = total[j][row_index] + reads[j][row_index][readIndex[j][row_index]];
+        readIndex[j][row_index] = readIndex[j][row_index] + 1;
+
+        if (readIndex[j][row_index] >= NUM_READ)
+        {
+          readIndex[j][row_index] = 0;
+        }
+
+        if (read_init < NUM_READ)
+        {
+          average[j][row_index] = total[j][row_index] / read_init;
+        }
+        else
+        {
+          average[j][row_index] = total[j][row_index] / NUM_READ;
+        }
+
+        if (average[j][row_index] < SENSE_THRS_NEG && (read_hall_array[row_index] & (1UL << (j))) > 0)
+        {
+          read_hall_array[row_index] &= ~(1UL << (j));
+        }
+        else if (average[j][row_index] > SENSE_THRS_POS && (read_hall_array[row_index] & (1UL << (j))) == 0)
+        {
+          read_hall_array[row_index] |= 1UL << (j);
+        }
       }
     }
   }
+/*
+  for (int z = 0; z < 8; z++)
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      DEBUG_SERIAL.print(average[z][i]);
+      DEBUG_SERIAL.print(";");
+    }
+    DEBUG_SERIAL.println();
+  }
+
   DEBUG_SERIAL.println();
   for (int z = 0; z < 8; z++)
   {
     DEBUG_SERIAL.println(read_hall_array[z], BIN);
   }
   DEBUG_SERIAL.println();
-  DEBUG_SERIAL.println();
-  delay(500);
+  DEBUG_SERIAL.println();*/
 }
 
 void rotate90CounterClockwise(uint8_t hallBoardState[8])
