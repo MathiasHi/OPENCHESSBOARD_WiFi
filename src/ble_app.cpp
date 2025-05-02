@@ -1,17 +1,17 @@
-#include "OpenChessBoard.h"
+#include "openchessboard.h"
 #include <ArduinoBleOTA.h>
 #include <ArduinoBleChess.h>
 #include <BleChessUuids.h>
 #include <BleOtaUuids.h>
 #include <BleChessMultiservice.h>
+#include <BleChessData.h>
 #define DEVICE_NAME "OCB" // max name size with 128 bit uuid is 11
 
 bool skip_next_send = false;
 bool my_castling_rights = true;
 bool opp_castling_rights = true;
-
-bool game_running = false;
 bool first_run = true;
+bool forceSync = false;
 
 bool isCastling(BleChessString move_input) {
   // check if last move was king move from castling
@@ -37,60 +37,124 @@ class Peripheral : public BleChessPeripheral
 {
 public:
   void onCentralFeature(const BleChessString& feature) override {
-    clearDisplay();
     const bool isSuppported =
-      feature == "msg" ||
-      feature == "last_move";
+      feature == BleChessFeature::Msg ||
+      feature == BleChessFeature::LastMove ||
+      feature == BleChessFeature::Check ||
+      feature == BleChessFeature::Side ||
+      feature == BleChessFeature::GetState ||
+      feature == BleChessFeature::VariantReason;
     sendPeripheralAck(isSuppported);
+    DEBUG_SERIAL.print("feature: ");
+    DEBUG_SERIAL.print(feature.c_str());
+    DEBUG_SERIAL.println(isSuppported ? " supported" : " unsupported");
   }
 
-  void onCentralFen(const BleChessString& fen) override {
+  void onCentralVariant(const BleChessString& variant) override {
+    const bool isSuppported =
+      variant == BleChessVariant::Standard ||
+      variant == BleChessVariant::ThreeCheck ||
+      variant == BleChessVariant::Atomic ||
+      variant == BleChessVariant::KingOfTheHill ||
+      variant == BleChessVariant::RacingKings;
+    sendPeripheralAck(isSuppported);
+    DEBUG_SERIAL.print("variant: ");
+    DEBUG_SERIAL.print(variant.c_str());
+    DEBUG_SERIAL.println(isSuppported ? " supported" : " unsupported");
+  }
+
+  void onCentralGetState() override {
+    DEBUG_SERIAL.print("get state");
+    sendPeripheralState(createFen().c_str());
+  }
+
+  void onCentralSetVariant(const BleChessString& variant) override {
+    DEBUG_SERIAL.print("set variant: ");
+    DEBUG_SERIAL.println(variant.c_str());
+  }
+
+  void onCentralSide(const BleChessString& side) override {
+    DEBUG_SERIAL.print("side: ");
+    DEBUG_SERIAL.println(side.c_str());
+
+    if (side == BleChessSide::White) {
+      DEBUG_SERIAL.print("white side");
+    } else if (side == BleChessSide::Black) {
+      DEBUG_SERIAL.print("black side");
+    } else if (side == BleChessSide::Both) {
+      DEBUG_SERIAL.print("both sides");
+    }
+  }
+
+  void onCentralBegin(const BleChessString& fen) override {
     clearDisplay();
     displayNewGame();
-    game_running = true;
-    DEBUG_SERIAL.print("new game: ");
+    is_game_running = true;
+    DEBUG_SERIAL.print("begin: ");
     DEBUG_SERIAL.println(fen.c_str());
     
-    String peripheralFen = getFen();
+    String peripheralFen = createFen();
     centralFen = fen;
-    isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
-    if (!isSynchronized) {
-      sendPeripheralAck(false);
-      sendPeripheralFen(peripheralFen.c_str());
+    if (forceSync){
+      peripheralFen = centralFen.c_str(); 
     }
-    sendPeripheralAck(true);
-  }
-
-  void onPeripheralFenAck(bool ack) override {
+    isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
+    DEBUG_SERIAL.print("peripheralFen: ");
+    DEBUG_SERIAL.println(peripheralFen);
+    isSynchronized ?
+      sendPeripheralSync(peripheralFen.c_str()) :
+      sendPeripheralUnsync(peripheralFen.c_str());
+    DEBUG_SERIAL.print(isSynchronized ? "synchronized" : "unsynchronized");
   }
 
   void onCentralMove(const BleChessString& mv) override {
     clearDisplay();
-    if (game_running){
-      DEBUG_SERIAL.print("moved from central: ");
+    if (is_game_running){
+      DEBUG_SERIAL.print("central move: ");
       DEBUG_SERIAL.println(mv.c_str());
+      //synchronize();
       displayMove(mv.c_str());
+      oppLastMove = mv.c_str();
       skip_next_send = true;
     }
-    sendPeripheralAck(true);
   }
 
   void onPeripheralMoveAck(bool ack) override {
-    if (ack){
-      clearDisplay();
-      onMoveAccepted();
-    }
-    else{
-      clearDisplay();
+    //DEBUG_SERIAL.print("trace: onPeripheralMoveAck");
+    clearDisplay();
+    ack ?
+      onMoveAccepted() :
       onMoveRejected();
-    }
   }
 
   void onPeripheralMovePromoted(const BleChessString& mv) override {
-    DEBUG_SERIAL.print("promoted on central screen: ");
+    DEBUG_SERIAL.print("promoted: ");
     DEBUG_SERIAL.println(mv.c_str());
+  }
 
-    sendPeripheralAck(true);
+  void onCentralEnd(const BleChessString& reason) override {
+    clearDisplay();
+    is_game_running = false;
+    DEBUG_SERIAL.print("end: ");
+    DEBUG_SERIAL.println(reason.c_str());
+
+    if (reason == BleChessEndReason::Checkmate) {
+      DEBUG_SERIAL.print("checkmate");
+    } else if (reason == BleChessEndReason::Draw) {
+      DEBUG_SERIAL.print("draw");
+    } else if (reason == BleChessEndReason::Timeout) {
+      DEBUG_SERIAL.print("timeout");
+    } else if (reason == BleChessEndReason::Resign) {
+      DEBUG_SERIAL.print("resign");
+    } else if (reason == BleChessEndReason::Abort) {
+      DEBUG_SERIAL.print("abort");
+    } else if (reason == BleChessEndReason::Undefined) {
+      DEBUG_SERIAL.print("variant end");
+    } else if (reason == BleChessVariantReason::ThreeCheck) {
+      DEBUG_SERIAL.print("tree check");
+    } else if (reason == BleChessVariantReason::KingOfTheHill) {
+      DEBUG_SERIAL.print("king of the hill");
+    }
   }
 
   void onCentralLastMove(const BleChessString& mv) override {
@@ -98,12 +162,16 @@ public:
     DEBUG_SERIAL.print("last move: ");
     DEBUG_SERIAL.println(mv.c_str());
     displayMove(mv.c_str());
+    oppLastMove = mv.c_str();
+  }
 
-    sendPeripheralAck(true);
+  void onCentralCheck(const BleChessString& kingPos) override {
+    DEBUG_SERIAL.print("check: ");
+    DEBUG_SERIAL.println(kingPos.c_str());
   }
 
   void onMoveAccepted() {
-    if (game_running) {
+    if (is_game_running) {
       clearDisplay();
       DEBUG_SERIAL.print("move accepted: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
@@ -115,7 +183,7 @@ public:
   }
 
   void onMoveRejected() {
-    if (game_running) {
+    if (is_game_running) {
       DEBUG_SERIAL.print("move rejected: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       for (int k = 0; k < 3; k++){
@@ -128,7 +196,30 @@ public:
     }
   }
   
+  void synchronize() {
+    //DEBUG_SERIAL.print("trace: synchronize");
+    if (!isSynchronized) {
+      sendPeripheralSync(createFen().c_str());
+    }
+    isSynchronized = true;
+  }
+
   void checkPeripheralMove() {
+    //DEBUG_SERIAL.print("trace: checkPeripheralMove");
+    if (!isSynchronized) {
+      String peripheralFen = createFen();
+      if (forceSync){
+        peripheralFen = centralFen.c_str(); 
+      }
+      isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
+      if (!isSynchronized) {
+        sendPeripheralState(peripheralFen.c_str());
+        delay(300);
+        return;
+      }
+      DEBUG_SERIAL.print("synchronized");
+      sendPeripheralSync(peripheralFen.c_str());
+    }
 
     BleChessString move = getMoveInput().c_str();
 
@@ -136,11 +227,11 @@ public:
       getMoveInput(); /* get second move from castling but do not send it: send king move only after second input */
     }
 
-    DEBUG_SERIAL.print("moved from peripheral: ");
+    DEBUG_SERIAL.print("peripheral move: ");
     DEBUG_SERIAL.println(move.c_str());
     
     clearDisplay();
-    if (!skip_next_send){
+    if (!skip_next_send & move != "") {
       sendPeripheralMove(move);
       lastPeripheralMove = move;
     }
@@ -172,9 +263,11 @@ void run_BLE_app(){
     BLE.poll();
   #endif
 
-  while(!game_running){
+  while(!is_game_running){
     ArduinoBleOTA.pull();
     displayWaitForGame();
   }
-  peripheral.checkPeripheralMove();
+  while(true){ // while BLE connected
+    peripheral.checkPeripheralMove();
+  }
 }
