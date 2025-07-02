@@ -1,0 +1,4 @@
+"#","Reference","Qty","Value","Footprint","DNP"
+"1","A1","1","Arduino_Nano_Every","Module:Arduino_Nano",""
+"2","Q1","1","BC640","Package_TO_SOT_THT:TO-92_Inline",""
+"3","U1","1","SS49E","Package_TO_SOT_THT:TO-92_Inline",""

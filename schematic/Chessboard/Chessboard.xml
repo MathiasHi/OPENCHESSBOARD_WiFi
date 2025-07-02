@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>C:\Users\Mathias\repos\OPENCHESSBOARD_WiFi\schematic\Chessboard\Chessboard.kicad_sch</source>
+    <date>2025-05-10T08:50:22+0200</date>
+    <tool>Eeschema 8.0.5</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>Chessboard.kicad_sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="A1">
+      <value>Arduino_Nano_Every</value>
+      <footprint>Module:Arduino_Nano</footprint>
+      <datasheet>https://content.arduino.cc/assets/NANOEveryV3.0_sch.pdf</datasheet>
+      <description>Arduino Nano Every</description>
+      <fields>
+        <field name="Footprint">Module:Arduino_Nano</field>
+        <field name="Datasheet">https://content.arduino.cc/assets/NANOEveryV3.0_sch.pdf</field>
+        <field name="Description">Arduino Nano Every</field>
+      </fields>
+      <libsource lib="MCU_Module" part="Arduino_Nano_Every" description="Arduino Nano Every"/>
+      <property name="Sheetname" value="Stammblatt"/>
+      <property name="Sheetfile" value="Chessboard.kicad_sch"/>
+      <property name="ki_keywords" value="Arduino nano microcontroller module USB UPDI AATMega4809 AVR"/>
+      <property name="ki_fp_filters" value="Arduino*Nano*"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a3cf658e-ca47-4890-8f06-5f0ff03e360b</tstamps>
+    </comp>
+    <comp ref="Q1">
+      <value>BC640</value>
+      <footprint>Package_TO_SOT_THT:TO-92_Inline</footprint>
+      <datasheet>https://www.onsemi.com/pub/Collateral/BC636-D.pdf</datasheet>
+      <description>1A Ic, 45V Vce, PNP Medium Power Transistor, TO-92</description>
+      <fields>
+        <field name="Footprint">Package_TO_SOT_THT:TO-92_Inline</field>
+        <field name="Datasheet">https://www.onsemi.com/pub/Collateral/BC636-D.pdf</field>
+        <field name="Description">1A Ic, 45V Vce, PNP Medium Power Transistor, TO-92</field>
+      </fields>
+      <libsource lib="Transistor_BJT" part="BC636" description="1A Ic, 45V Vce, PNP Medium Power Transistor, TO-92"/>
+      <property name="Sheetname" value="Stammblatt"/>
+      <property name="Sheetfile" value="Chessboard.kicad_sch"/>
+      <property name="ki_keywords" value="PNP Transistor"/>
+      <property name="ki_fp_filters" value="TO?92*"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>aabb9f85-84a6-42a5-bebc-7a1b6c2334db</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>SS49E</value>
+      <footprint>Package_TO_SOT_THT:TO-92_Inline</footprint>
+      <datasheet>https://www.ti.com/lit/ds/symlink/drv5033.pdf</datasheet>
+      <description>±6.9 / ±3.5 mT, 20-kHz, 2-38V, TO-92</description>
+      <fields>
+        <field name="Footprint">Package_TO_SOT_THT:TO-92_Inline</field>
+        <field name="Datasheet">https://www.ti.com/lit/ds/symlink/drv5033.pdf</field>
+        <field name="Description">±6.9 / ±3.5 mT, 20-kHz, 2-38V, TO-92</field>
+      </fields>
+      <libsource lib="Sensor_Magnetic" part="DRV5033AJxLPG" description="±6.9 / ±3.5 mT, 20-kHz, 2-38V, TO-92"/>
+      <property name="Sheetname" value="Stammblatt"/>
+      <property name="Sheetfile" value="Chessboard.kicad_sch"/>
+      <property name="ki_keywords" value="Digital Omnipolar Switch Hall Effect Sensor"/>
+      <property name="ki_fp_filters" value="TO?92*"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e6f17120-c665-442c-b0bb-3793adf34e54</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="MCU_Module" part="Arduino_Nano_Every">
+      <description>Arduino Nano Every</description>
+      <docs>https://content.arduino.cc/assets/NANOEveryV3.0_sch.pdf</docs>
+      <footprints>
+        <fp>Arduino*Nano*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">A</field>
+        <field name="Value">Arduino_Nano_Every</field>
+        <field name="Footprint">Module:Arduino_Nano</field>
+        <field name="Datasheet">https://content.arduino.cc/assets/NANOEveryV3.0_sch.pdf</field>
+        <field name="Description">Arduino Nano Every</field>
+      </fields>
+      <pins>
+        <pin num="1" name="TX1" type="bidirectional"/>
+        <pin num="2" name="RX1" type="bidirectional"/>
+        <pin num="3" name="~{RESET}" type="input"/>
+        <pin num="4" name="GND" type="power_in"/>
+        <pin num="5" name="D2" type="bidirectional"/>
+        <pin num="6" name="D3" type="bidirectional"/>
+        <pin num="7" name="D4" type="bidirectional"/>
+        <pin num="8" name="D5" type="bidirectional"/>
+        <pin num="9" name="D6" type="bidirectional"/>
+        <pin num="10" name="D7" type="bidirectional"/>
+        <pin num="11" name="D8" type="bidirectional"/>
+        <pin num="12" name="D9" type="bidirectional"/>
+        <pin num="13" name="D10" type="bidirectional"/>
+        <pin num="14" name="MOSI" type="bidirectional"/>
+        <pin num="15" name="MISO" type="bidirectional"/>
+        <pin num="16" name="SCK" type="bidirectional"/>
+        <pin num="17" name="3V3" type="power_out"/>
+        <pin num="18" name="AREF" type="input"/>
+        <pin num="19" name="A0" type="bidirectional"/>
+        <pin num="20" name="A1" type="bidirectional"/>
+        <pin num="21" name="A2" type="bidirectional"/>
+        <pin num="22" name="A3" type="bidirectional"/>
+        <pin num="23" name="SDA/A4" type="bidirectional"/>
+        <pin num="24" name="SCL/A5" type="bidirectional"/>
+        <pin num="25" name="A6" type="bidirectional"/>
+        <pin num="26" name="A7" type="bidirectional"/>
+        <pin num="27" name="+5V" type="power_out"/>
+        <pin num="28" name="~{RESET}" type="input"/>
+        <pin num="29" name="GND" type="passive"/>
+        <pin num="30" name="VIN" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Sensor_Magnetic" part="DRV5033AJxLPG">
+      <description>±6.9 / ±3.5 mT, 20-kHz, 2-38V, TO-92</description>
+      <docs>https://www.ti.com/lit/ds/symlink/drv5033.pdf</docs>
+      <footprints>
+        <fp>TO?92*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">DRV5033AJxLPG</field>
+        <field name="Footprint">Package_TO_SOT_THT:TO-92_Inline</field>
+        <field name="Datasheet">https://www.ti.com/lit/ds/symlink/drv5033.pdf</field>
+        <field name="Description">±6.9 / ±3.5 mT, 20-kHz, 2-38V, TO-92</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VCC" type="power_in"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="OUT" type="output"/>
+      </pins>
+    </libpart>
+    <libpart lib="Transistor_BJT" part="BC636">
+      <description>1A Ic, 45V Vce, PNP Medium Power Transistor, TO-92</description>
+      <docs>https://www.onsemi.com/pub/Collateral/BC636-D.pdf</docs>
+      <footprints>
+        <fp>TO?92*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">BC636</field>
+        <field name="Footprint">Package_TO_SOT_THT:TO-92_Inline</field>
+        <field name="Datasheet">https://www.onsemi.com/pub/Collateral/BC636-D.pdf</field>
+        <field name="Description">1A Ic, 45V Vce, PNP Medium Power Transistor, TO-92</field>
+      </fields>
+      <pins>
+        <pin num="1" name="E" type="passive"/>
+        <pin num="2" name="C" type="passive"/>
+        <pin num="3" name="B" type="input"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="MCU_Module">
+      <uri>C:\Program Files\KiCad\8.0\share\kicad\symbols\/MCU_Module.kicad_sym</uri>
+    </library>
+    <library logical="Sensor_Magnetic">
+      <uri>C:\Program Files\KiCad\8.0\share\kicad\symbols\/Sensor_Magnetic.kicad_sym</uri>
+    </library>
+    <library logical="Transistor_BJT">
+      <uri>C:\Program Files\KiCad\8.0\share\kicad\symbols\/Transistor_BJT.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(A1-GND-Pad29)">
+      <node ref="A1" pin="29" pinfunction="GND" pintype="passive"/>
+      <node ref="A1" pin="4" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="2" name="unconnected-(A1-+5V-Pad27)">
+      <node ref="A1" pin="27" pinfunction="+5V" pintype="power_out"/>
+    </net>
+    <net code="3" name="unconnected-(A1-3V3-Pad17)">
+      <node ref="A1" pin="17" pinfunction="3V3" pintype="power_out"/>
+    </net>
+    <net code="4" name="unconnected-(A1-A0-Pad19)">
+      <node ref="A1" pin="19" pinfunction="A0" pintype="bidirectional"/>
+    </net>
+    <net code="5" name="unconnected-(A1-A1-Pad20)">
+      <node ref="A1" pin="20" pinfunction="A1" pintype="bidirectional"/>
+    </net>
+    <net code="6" name="unconnected-(A1-A2-Pad21)">
+      <node ref="A1" pin="21" pinfunction="A2" pintype="bidirectional"/>
+    </net>
+    <net code="7" name="unconnected-(A1-A3-Pad22)">
+      <node ref="A1" pin="22" pinfunction="A3" pintype="bidirectional"/>
+    </net>
+    <net code="8" name="unconnected-(A1-A6-Pad25)">
+      <node ref="A1" pin="25" pinfunction="A6" pintype="bidirectional"/>
+    </net>
+    <net code="9" name="unconnected-(A1-A7-Pad26)">
+      <node ref="A1" pin="26" pinfunction="A7" pintype="bidirectional"/>
+    </net>
+    <net code="10" name="unconnected-(A1-AREF-Pad18)">
+      <node ref="A1" pin="18" pinfunction="AREF" pintype="input"/>
+    </net>
+    <net code="11" name="unconnected-(A1-D2-Pad5)">
+      <node ref="A1" pin="5" pinfunction="D2" pintype="bidirectional"/>
+    </net>
+    <net code="12" name="unconnected-(A1-D3-Pad6)">
+      <node ref="A1" pin="6" pinfunction="D3" pintype="bidirectional"/>
+    </net>
+    <net code="13" name="unconnected-(A1-D4-Pad7)">
+      <node ref="A1" pin="7" pinfunction="D4" pintype="bidirectional"/>
+    </net>
+    <net code="14" name="unconnected-(A1-D5-Pad8)">
+      <node ref="A1" pin="8" pinfunction="D5" pintype="bidirectional"/>
+    </net>
+    <net code="15" name="unconnected-(A1-D6-Pad9)">
+      <node ref="A1" pin="9" pinfunction="D6" pintype="bidirectional"/>
+    </net>
+    <net code="16" name="unconnected-(A1-D7-Pad10)">
+      <node ref="A1" pin="10" pinfunction="D7" pintype="bidirectional"/>
+    </net>
+    <net code="17" name="unconnected-(A1-D8-Pad11)">
+      <node ref="A1" pin="11" pinfunction="D8" pintype="bidirectional"/>
+    </net>
+    <net code="18" name="unconnected-(A1-D9-Pad12)">
+      <node ref="A1" pin="12" pinfunction="D9" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="unconnected-(A1-D10-Pad13)">
+      <node ref="A1" pin="13" pinfunction="D10" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="unconnected-(A1-MISO-Pad15)">
+      <node ref="A1" pin="15" pinfunction="MISO" pintype="bidirectional"/>
+    </net>
+    <net code="21" name="unconnected-(A1-MOSI-Pad14)">
+      <node ref="A1" pin="14" pinfunction="MOSI" pintype="bidirectional"/>
+    </net>
+    <net code="22" name="unconnected-(A1-RX1-Pad2)">
+      <node ref="A1" pin="2" pinfunction="RX1" pintype="bidirectional"/>
+    </net>
+    <net code="23" name="unconnected-(A1-SCK-Pad16)">
+      <node ref="A1" pin="16" pinfunction="SCK" pintype="bidirectional"/>
+    </net>
+    <net code="24" name="unconnected-(A1-SCL{slash}A5-Pad24)">
+      <node ref="A1" pin="24" pinfunction="SCL/A5" pintype="bidirectional"/>
+    </net>
+    <net code="25" name="unconnected-(A1-SDA{slash}A4-Pad23)">
+      <node ref="A1" pin="23" pinfunction="SDA/A4" pintype="bidirectional"/>
+    </net>
+    <net code="26" name="unconnected-(A1-TX1-Pad1)">
+      <node ref="A1" pin="1" pinfunction="TX1" pintype="bidirectional"/>
+    </net>
+    <net code="27" name="unconnected-(A1-VIN-Pad30)">
+      <node ref="A1" pin="30" pinfunction="VIN" pintype="power_in"/>
+    </net>
+    <net code="28" name="unconnected-(A1-~{RESET}-Pad3)">
+      <node ref="A1" pin="3" pinfunction="~{RESET}" pintype="input"/>
+    </net>
+    <net code="29" name="unconnected-(A1-~{RESET}-Pad28)">
+      <node ref="A1" pin="28" pinfunction="~{RESET}" pintype="input"/>
+    </net>
+    <net code="30" name="unconnected-(Q1-B-Pad3)">
+      <node ref="Q1" pin="3" pinfunction="B" pintype="input"/>
+    </net>
+    <net code="31" name="unconnected-(Q1-C-Pad2)">
+      <node ref="Q1" pin="2" pinfunction="C" pintype="passive"/>
+    </net>
+    <net code="32" name="unconnected-(Q1-E-Pad1)">
+      <node ref="Q1" pin="1" pinfunction="E" pintype="passive"/>
+    </net>
+    <net code="33" name="unconnected-(U1-GND-Pad2)">
+      <node ref="U1" pin="2" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="34" name="unconnected-(U1-OUT-Pad3)">
+      <node ref="U1" pin="3" pinfunction="OUT" pintype="output"/>
+    </net>
+    <net code="35" name="unconnected-(U1-VCC-Pad1)">
+      <node ref="U1" pin="1" pinfunction="VCC" pintype="power_in"/>
+    </net>
+  </nets>
+</export>
