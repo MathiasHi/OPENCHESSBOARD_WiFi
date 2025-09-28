@@ -97,11 +97,11 @@ void shiftOut(byte led_data_array[])
 
         if (index % 2 == 0)
         {
-          setLEDs(i, k, strip.Color(30, 30, 30));
+          setLEDs(i, k, strip.Color(5, 5, 5));
         }
         else
         {
-          setLEDs(i, k, strip.Color(60, 20, 0));
+          setLEDs(i, k, strip.Color(5, 1, 0));
         }
       }
     }
