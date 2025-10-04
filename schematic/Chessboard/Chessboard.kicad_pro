@@ -51,7 +51,13 @@
           "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [],
       "meta": {
         "version": 2
@@ -181,7 +187,10 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0,
+        0.5
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -208,7 +217,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -489,7 +503,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "gerber/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
@@ -618,11 +632,23 @@
     ],
     [
       "071930cb-8421-4e26-aa40-5c9354a65817",
-      "LED"
+      "LED_ROW_1_2"
     ],
     [
       "b29eb1e3-19cc-46d3-986a-1f65dd1b96c7",
       "Sensor"
+    ],
+    [
+      "932ffc7f-d433-425a-86fb-13e02c74202b",
+      "LED_ROW_3_4"
+    ],
+    [
+      "e55504a1-65f2-449e-8407-3e3726831fd1",
+      "LED_ROW_5_6"
+    ],
+    [
+      "b1418498-f389-416e-8d3b-caf8babccd11",
+      "LED_ROW_7_8"
     ]
   ],
   "text_variables": {}
