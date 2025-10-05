@@ -1231,7 +1231,7 @@
 		)
 		(uuid "ff024f9e-a544-4158-8b71-ded5b784971b")
 	)
-	(global_label "DIS"
+	(global_label "DIL"
 		(shape input)
 		(at 124.46 127 270)
 		(fields_autoplaced yes)
@@ -1243,7 +1243,7 @@
 		)
 		(uuid "0ded7d0a-929f-47ec-9265-ba99a3a9804d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 124.46 133.0695 90)
+			(at 124.46 132.8881 90)
 			(effects
 				(font
 					(size 1.27 1.27)
