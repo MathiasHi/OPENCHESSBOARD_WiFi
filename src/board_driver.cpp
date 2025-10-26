@@ -264,7 +264,6 @@ String getMoveInput(void)
     hallBoardStateInit[k] = 0x00;
     hallBoardState1[k] = 0x00;
     hallBoardState2[k] = 0x00;
-    hallBoardState3[k] = 0x00;
     ledBoardState[k] = 0x00;
   }
 
@@ -286,7 +285,7 @@ String getMoveInput(void)
 
         int state1 = bitRead(hallBoardStateInit[row_index], col_index);
         int state2 = bitRead(hallBoardState1[row_index], col_index);
-        if (state1 != state2)
+        if (state1 == 1 && state2 == 0)
         {
           ledBoardState[7 - row_index] |= 1UL << (7 - col_index);
 #ifdef PLUG_AT_TOP
@@ -311,9 +310,6 @@ String getMoveInput(void)
   while (!mvFinished && is_game_running)
   {
     readHall(hallBoardState2);
-    delay(100);
-    readHall(hallBoardState3);
-    delay(100);
 
     for (int row_index = 0; row_index < 8; row_index++)
     {
@@ -322,22 +318,23 @@ String getMoveInput(void)
 
         int state_prev = bitRead(hallBoardState1[row_index], col_index);
 
-        int hallBoardState1 = bitRead(hallBoardState2[row_index], col_index);
-        int hallBoardState2 = bitRead(hallBoardState3[row_index], col_index);
+        int state1 = bitRead(hallBoardState2[row_index], col_index);
 
-        if ((hallBoardState1 != state_prev) && (hallBoardState2 != state_prev))
+        if ((state1 == 1 && state_prev == 0))
         {
-          if (hallBoardState1 == hallBoardState2)
-          {
-            mvFinished = true;
-            ledBoardState[7 - row_index] |= 1UL << (7 - col_index);
+          mvFinished = true;
+          ledBoardState[7 - row_index] |= 1UL << (7 - col_index);
 
 #ifdef PLUG_AT_TOP
-            mvInput = mvInput + (String)columns[7 - col_index] + (String)(7 - row_index + 1);
+          mvInput = mvInput + (String)columns[7 - col_index] + (String)(7 - row_index + 1);
 #else
-            mvInput = mvInput + (String)columns[7 - row_index] + (String)(col_index + 1);
+          mvInput = mvInput + (String)columns[7 - row_index] + (String)(col_index + 1);
 #endif
-          }
+        }
+        else if ((state1 == 0 && state_prev == 1))
+        {
+          // took away a piece because he wants to take -> reset hallBoardState1
+          readHall(hallBoardState1);
         }
       }
     }
