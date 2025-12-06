@@ -5,8 +5,6 @@
 String board_gameMode;
 String board_startupType;
 
-//#define PLUG_AT_TOP
-
 void setup() {
 
 
