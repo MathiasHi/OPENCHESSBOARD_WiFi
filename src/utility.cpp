@@ -155,7 +155,6 @@ bool isStartingPosition(void){
   readHall(read_hall_array);
 
   calculateDifference(diff_pattern, read_hall_array, pattern1);
-  rotate180(diff_pattern);
   dimLEDs = true;
   displayArray(diff_pattern);
 
@@ -174,23 +173,37 @@ void readBoardSelection(){
   byte pattern3[8];
   byte pattern4[8];
 
-  memset(pattern1, 0xC3, sizeof(pattern1));
-  memset(pattern2, 0xC3, sizeof(pattern2));
-  memset(pattern3, 0xC3, sizeof(pattern3));
+  memset(pattern1, 0x00, sizeof(pattern1));
+  memset(pattern2, 0x00, sizeof(pattern2));
+  memset(pattern3, 0x00, sizeof(pattern3));
   memset(pattern4, 0x00, sizeof(pattern4));
 
-  pattern1[7] =0xC2; // remove piece on a1 to select this
-  pattern2[6] =0xC2; // remove piece on b1 to select this
-  pattern3[5] =0xC2; // remove piece on b1 to select this
+  pattern1[0] =0xFE; // remove piece on a1 to select this
+  pattern1[1] =0xFF;
+  pattern1[6] =0xFF;
+  pattern1[7] =0xFF;
 
-  pattern4[0] =0xFF; // place 8 pieces on h column (plug at right)
+  pattern2[0] =0xFD; // remove piece on b1 to select this
+  pattern2[1] =0xFF;
+  pattern2[6] =0xFF;
+  pattern2[7] =0xFF;
+
+  pattern3[0] =0xFB; // remove piece on c1 to select this
+  pattern3[1] =0xFF;
+  pattern3[6] =0xFF;
+  pattern3[7] =0xFF;
+
+  pattern4[0] =0xF7; // remove piece on d1 to select this
+  pattern4[1] =0xFF;
+  pattern4[6] =0xFF;
+  pattern4[7] =0xFF;
   
 
   readHall(read_hall_array);
   DEBUG_SERIAL.print("read_hall_array: ");
 
   for (int i = 0; i < 8; i++) {
-      Serial.print(read_hall_array[i], HEX);
+      DEBUG_SERIAL.print(read_hall_array[i], HEX);
       if (i < 8 - 1) {
           DEBUG_SERIAL.print(", "); 
       }

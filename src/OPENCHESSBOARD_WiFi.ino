@@ -17,6 +17,8 @@ void setup() {
   delay(3000);
 #endif
 
+DEBUG_SERIAL.println("Start App...");   
+
 validateFirmware(); // runs wifi as check
 
 readSettings();

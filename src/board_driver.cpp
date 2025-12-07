@@ -177,29 +177,6 @@ void readHall(byte read_hall_array[])
   }
 }
 
-void rotate90CounterClockwise(uint8_t hallBoardState[8])
-{
-  uint8_t rotated[8] = {0}; // New rotated board
-
-  for (int row = 0; row < 8; row++)
-  {
-    for (int col = 0; col < 8; col++)
-    {
-      // Extract the bit from (row, col)
-      uint8_t bit = (hallBoardState[row] >> col) & 1;
-
-      // Place it at the rotated position
-      rotated[7 - col] |= (bit << row);
-    }
-  }
-
-  // Copy back the rotated result
-  for (int i = 0; i < 8; i++)
-  {
-    hallBoardState[i] = rotated[i];
-  }
-}
-
 /* ---------------------------------------
  *  Function that waits for a move input.
  *  Waits for a move input (blocking, but can be exited by isr if game is set to be not running)
@@ -368,8 +345,6 @@ String createFen(void)
 {
   byte hallBoardState[8];
   readHall(hallBoardState);
-  //rotate90CounterClockwise(hallBoardState);
-  //rotate180(hallBoardState);
 
   return createPiecesPlacement(hallBoardState);
 }
@@ -427,7 +402,7 @@ void displayConnectWait(void)
 
   if (update_flipstate)
   {
-    connect_led_array[0] = 0x10;
+    connect_led_array[4] = 0x01;
   }
   update_flipstate ^= true;
 
@@ -498,7 +473,7 @@ void displayBootWait(void)
 
   if (update_flipstate)
   {
-    boot_led_array[0] = 0x10;
+    boot_led_array[3] = 0x01;
   }
   update_flipstate ^= true;
 
@@ -520,7 +495,7 @@ void displayUpdateWait(void)
 
   if (update_flipstate)
   {
-    update_led_array[0] = 0x80;
+    update_led_array[2] = 0x01;
   }
   update_flipstate ^= true;
 
@@ -565,26 +540,6 @@ void calculateDifference(byte result[], byte a[], byte b[])
   for (int i = 0; i < 8; i++)
   {
     result[i] = b[i] & ~a[i];
-  }
-}
-
-void rotate180(byte arr[8])
-{
-  for (int i = 0; i < 4; i++)
-  {
-    // Reverse the bits in the byte at arr[i] and arr[7-i] and swap them
-    byte temp = arr[i];
-    arr[i] = arr[7 - i];
-    arr[7 - i] = temp;
-
-    // Reverse the bits in each byte after swapping
-    arr[i] = (arr[i] & 0xF0) >> 4 | (arr[i] & 0x0F) << 4;
-    arr[i] = (arr[i] & 0xCC) >> 2 | (arr[i] & 0x33) << 2;
-    arr[i] = (arr[i] & 0xAA) >> 1 | (arr[i] & 0x55) << 1;
-
-    arr[7 - i] = (arr[7 - i] & 0xF0) >> 4 | (arr[7 - i] & 0x0F) << 4;
-    arr[7 - i] = (arr[7 - i] & 0xCC) >> 2 | (arr[7 - i] & 0x33) << 2;
-    arr[7 - i] = (arr[7 - i] & 0xAA) >> 1 | (arr[7 - i] & 0x55) << 1;
   }
 }
 
@@ -691,6 +646,7 @@ void displayWaitForGame(void)
   delay(80);
   displayFrame(step2);
   delay(80);
+
   displayFrame(step1);
   delay(80);
   clearDisplay();
